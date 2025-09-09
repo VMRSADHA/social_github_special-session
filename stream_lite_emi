@@ -1,0 +1,63 @@
+# loan_calculator.py
+
+import streamlit as st
+
+# EMI calculation function
+def calculate_emi(principal, annual_rate, tenure_years):
+    monthly_rate = annual_rate / (12 * 100)
+    tenure_months = tenure_years * 12
+    if monthly_rate == 0:
+        emi = principal / tenure_months
+    else:
+        emi = principal * monthly_rate * ((1 + monthly_rate) ** tenure_months) / (((1 + monthly_rate) ** tenure_months) - 1)
+    return emi, tenure_months
+
+# Main Streamlit App
+def main():
+    st.set_page_config(page_title="Loan Calculator", layout="centered")
+    st.title("📊 Loan EMI Calculator")
+
+    st.sidebar.header("Loan Details")
+
+    loan_type = st.sidebar.selectbox(
+        "Select Loan Type",
+        ("Home Loan", "Car Loan", "Personal Loan", "Education Loan")
+    )
+
+    # Default interest rates based on loan type (can be changed by user)
+    default_interest = {
+        "Home Loan": 7.5,
+        "Car Loan": 9.0,
+        "Personal Loan": 12.0,
+        "Education Loan": 10.0
+    }
+
+    principal = st.sidebar.number_input("Loan Amount (in ₹)", min_value=10000, step=10000, value=500000)
+    tenure = st.sidebar.slider("Loan Tenure (in Years)", 1, 30, 5)
+    interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", min_value=0.0, value=default_interest[loan_type])
+
+    if st.sidebar.button("Calculate EMI"):
+        emi, months = calculate_emi(principal, interest_rate, tenure)
+        total_payment = emi * months
+        total_interest = total_payment - principal
+
+        st.subheader("📄 Loan Summary")
+        st.write(f"**Loan Type:** {loan_type}")
+        st.write(f"**Loan Amount:** ₹{principal:,.2f}")
+        st.write(f"**Interest Rate:** {interest_rate}% per annum")
+        st.write(f"**Tenure:** {tenure} years ({months} months)")
+        st.success(f"**Monthly EMI:** ₹{emi:,.2f}")
+        st.info(f"**Total Payment:** ₹{total_payment:,.2f}")
+        st.warning(f"**Total Interest Payable:** ₹{total_interest:,.2f}")
+
+        # Optional chart
+        st.subheader("📉 Payment Breakdown")
+        st.bar_chart({
+            'Amount (₹)': {
+                'Principal': principal,
+                'Total Interest': total_interest
+            }
+        })
+
+if __name__ == "__main__":
+    main()
